@@ -15,10 +15,9 @@ entry_points:
     command: |
       python -m main \
         --preprocess_data {preprocess_data} \
-        --preprocess_fetch {preprocess_fetch} \
         --preprocess_downstream {preprocess_downstream} \
         --preprocess_cached_data_id {preprocess_cached_data_id} \
-        --train_downstream {train_downstream} \
+        --train_upstream {train_upstream} \
         --train_downstream {train_downstream} \
         --train_model_type {train_model_type} \
         --train_cv_type {train_cv_type} \

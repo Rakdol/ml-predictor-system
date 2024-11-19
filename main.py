@@ -135,7 +135,7 @@ def main():
         preprocess_run = mlflow.tracking.MlflowClient().get_run(preprocess_run.run_id)
         
         train_upstream = os.path.join(
-            "/tmp/mlruns/",
+            "/mlflow/tmp/mlruns/",
             str(mlflow_experiment_id),
             preprocess_run.info.run_id,
             "artifacts/downstream_directory",
@@ -143,7 +143,7 @@ def main():
         
         train_run = mlflow.run(
             uri="./train",
-            entry_pont="train",
+            entry_point="train",
             backend="local",
             parameters={
                 "upstream": train_upstream,
