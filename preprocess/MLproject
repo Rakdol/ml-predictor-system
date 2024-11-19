@@ -1,0 +1,19 @@
+name: predictor-preprocess
+
+docker_env:
+  image: predictor-system:0.0.1
+  volumes: ["$(pwd)/../data:/opt/data", $(pwd):/mlflow/projects/code]
+
+
+entry_points:
+  preprocess:
+    parameters:
+      data: {type: string, default: load}
+      downstream: {type: string, default: /opt/data/preprocess}
+      cached_data_id: {type: string, default: ""}
+
+    command: |
+      python -m src.preprocess \
+        --data {data} \
+        --downstream {downstream} \
+        --cached_data_id {cached_data_id}

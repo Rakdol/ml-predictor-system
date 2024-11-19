@@ -1,0 +1,11 @@
+# Python version required to run the project.
+python: "3.10.14"
+# Dependencies required to build packages. This field is optional.
+build_dependencies:
+  - pip
+  - setuptools
+# Dependencies required to run the project.
+dependencies:
+  - mlflow==2.15.1
+  - numpy==1.26.4
+  - pandas==2.2.2
