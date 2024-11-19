@@ -42,7 +42,7 @@ def transform_cyclic(df: pd.DataFrame, col: str, max_val: int) -> pd.DataFrame:
 
 def set_time_index(df:pd.DataFrame, time_column:str="Forecast_time") -> None:
     df.set_index(pd.to_datetime(df[time_column]), inplace=True)
-    df.drop(labels=[time_column], aixs=1, inplace=True)
+    df.drop(labels=[time_column], axis=1, inplace=True)
     
     
 def grouped_frame(df: pd.DataFrame,

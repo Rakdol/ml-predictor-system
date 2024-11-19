@@ -1,7 +1,10 @@
 import os
+import json
+import joblib
 from logging import getLogger
 from argparse import ArgumentParser, RawTextHelpFormatter
 
+import mlflow
 from sklearn.model_selection import StratifiedKFold, KFold, TimeSeriesSplit
 from sklearn.linear_model import LinearRegression, Lasso, Ridge, ElasticNet
 from sklearn.tree import DecisionTreeRegressor
@@ -69,8 +72,8 @@ def start_run(
     else:
         raise ValueError("Invalid model type is provided.")
 
-    X_train, y_train = train_set.pandas_reader_dataset(target=target)
-    X_test, y_test = test_set.pandas_reader_dataset(target=target)
+    X_train, y_train = train_set.pandas_reader_dataset(target=target, time_column="Forecast_time")
+    X_test, y_test = test_set.pandas_reader_dataset(target=target, time_column="Forecast_time")
 
     if cv_type == CV_ENUM.simple_cv.value:
         cv = KFold(n_splits=n_split, shuffle=True, random_state=42)
@@ -91,7 +94,7 @@ def start_run(
                 "Lasso Regression": Lasso(),
                 "Ridge Regression": Ridge(),
                 "Elastic Regression": ElasticNet(),
-                "MLP Regression": MLPRegressor(),
+                "MLP Regression": MLPRegressor(max_iter=2000),
                 
             }
     
@@ -105,10 +108,42 @@ def start_run(
         model_type="regression",
         params=None
     )
-    
-    print(trained_result)
-    # evaluate()
 
+    mlflow.log_metrics(
+        {model_name: model_score for model_name, model_score in trained_result.items()}
+    )
+    model_train_result_file = os.path.join(downstream_directory, f"model_result_{mlflow_experiment_id}.json")
+
+    with open(model_train_result_file, "w") as f:
+        json.dump(trained_result, f)
+
+    mlflow.log_artifact(model_train_result_file)
+
+    best_key = max(trained_result, key=trained_result.get)
+    best_model = trained_models[best_key]
+
+    print(f"Best Model with the minimum nmse: {best_key}, {trained_result[best_key]}")
+    
+    signature = mlflow.models.signature.infer_signature(
+        X_train,
+        best_model.predict(X_train),
+    )
+    input_sample = X_train[:2]
+
+    mlflow.sklearn.log_model(
+        sk_model=best_model,
+        artifact_path="model",
+        signature=signature,
+        input_example=input_sample,
+    )
+
+    model_file_name = os.path.join(
+        downstream_directory,
+        f"machine_{model_type}_{mlflow_experiment_id}.joblib",
+    )
+    joblib.dump(best_model, model_file_name)
+    mlflow.log_artifact(model_file_name)
+    logger.info("Save model in mlflow")
 
 def main():
 
@@ -169,3 +204,7 @@ def main():
         cv_type=args.cv_type,
         n_split=args.n_split,
     )
+
+
+if __name__ == "__main__":
+    main()

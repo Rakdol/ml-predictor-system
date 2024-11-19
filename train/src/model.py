@@ -68,7 +68,7 @@ class LoadDataset(object):
         df['hour_mean'] = df.apply(lambda x: hour_group_energy.loc[(hour_group_energy.hour == x['hour']), f'{target}_mean'].values[0], axis=1)
         df['hour_std'] = df.apply(lambda x: hour_group_energy_std.loc[(hour_group_energy_std.hour == x['hour']), f'{target}_std'].values[0], axis=1)
         df['dayweek_hour_mean'] = df.apply(lambda x: dayweek_hour_gruop_energy.loc[(dayweek_hour_gruop_energy.hour == x['hour']) & (
-            dayweek_hour_gruop_energy.cloudy == x['cloudy']), f'{target}_mean'].values[0], axis=1)
+            dayweek_hour_gruop_energy.dayofweek == x['dayofweek']), f'{target}_mean'].values[0], axis=1)
         
         return df
         
@@ -230,6 +230,8 @@ def train_cv_models(
         logger.info(f"Training model: {key}")
 
         # Perform cross-validation
+        X_train = X_train.dropna()
+        y_train = y_train.loc[X_train.index]
         scores = cross_val_score(model_, X_train, y_train, cv=cv, scoring=indicators)
         trained_result[key] = np.mean(scores)
 
