@@ -1,0 +1,23 @@
+name: predictor-evaluate
+
+docker_env:
+  image: predictor-system:0.0.1
+  volumes:
+    [
+      "$(pwd)/../data:/opt/data",
+      "$(pwd)/../artifacts/model:/opt/artifacts/model",
+      $(pwd):/mlflow/projects/code,
+    ]
+
+entry_points:
+  evaluate:
+    parameters:
+      upstream: {type: string, default: /opt/artifacts/model/}
+      downstream: {type: string, default: /opt/evaluate/}
+      test_parent_directory: {type: string, default: /opt/data/preprocess}
+
+    command: |
+      python -m src.evaluate \
+        --upstream {upstream} \
+        --downstream {downstream} \
+        --test_parent_directory {test_parent_directory}
