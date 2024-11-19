@@ -1,0 +1,27 @@
+name: predictor-train
+
+docker_env:
+  image: predictor-system:0.0.1
+  volumes:
+    [
+      "$(pwd)/../data:/opt/data",
+      "$(pwd)/../artifacts/model:/opt/artifacts/model",
+      $(pwd):/mlflow/projects/code,
+    ]
+
+entry_points:
+  train:
+    parameters:
+      upstream: { type: string, default: "" }
+      downstream: { type: string, default: /opt/artifacts/model/ }
+      model_type: { type: string, default: load }
+      cv_type: { type: string, default: cv }
+      n_split: { type: int, default: 5 }
+
+    command: |
+      python -m src.train \
+        --upstream {upstream} \
+        --downstream {downstream} \
+        --model_type {model_type} \
+        --cv_type {cv_type} \
+        --n_split {n_split}

@@ -42,10 +42,21 @@ class SolarFeatures:
         "Humidity",
         "WindSpeed",
         "WindDirection",
+    ]
+    CAT_FEATURES = [
         "Cloud",
     ]
     DATE_FEATURES = ["Forecast_time"]
-
+    
+    SCALE_FEATURES =[
+        "Temperature",
+        "Humidity",
+        "hour_mean",
+        "hour_std",
+        "cloud_hour_mean"
+    ]
+    
+    
 
 class LoadFeatures:
     TARGET = "Load"
@@ -55,6 +66,13 @@ class LoadFeatures:
     ]
     CAT_FEATURES = [
         "is_hol",
+    ]
+    SCALE_FEATURES =[
+        "temperature",
+        "humidity",
+        "hour_mean",
+        "hour_std",
+        "dayweek_hour_mean"
     ]
     DATE_FEATURES = ["Forecast_time"]
 

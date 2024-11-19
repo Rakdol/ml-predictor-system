@@ -57,11 +57,44 @@ def main():
         default="",
         help="previous run id for cache",
     )
-
-    client = MlflowClient()
+    
+    parser.add_argument(
+        "--train_model_type",
+        type=str,
+        default="load",
+        help="forecasting model type load or solar"
+    )
+    
+    parser.add_argument(
+        "--train_upstream",
+        type=str,
+        default="/opt/data/preprocess"
+    )
+    
+    parser.add_argument(
+        "--train_downstream",
+        type=str,
+        default="/opt/model",
+        help="downstream directory",
+    )
+    
+    parser.add_argument(
+        "--train_cv_type",
+        type=str,
+        default="cv",
+        help="general cv method",
+    )
+    
+    parser.add_argument(
+        "--train_n_split",
+        type=int,
+        default=5,
+        help="CV's n_split",
+    )
 
     args = parser.parse_args()
     data_name = args.preprocess_data
+    
     if data_name == "load":
         experiment_tags = get_load_experiment_tags()
     elif data_name == "solar":
@@ -101,12 +134,39 @@ def main():
 
         preprocess_run = mlflow.tracking.MlflowClient().get_run(preprocess_run.run_id)
         
-        dataset = os.path.join(
+        train_upstream = os.path.join(
             "/tmp/mlruns/",
             str(mlflow_experiment_id),
             preprocess_run.info.run_id,
             "artifacts/downstream_directory",
         )
+        
+        train_run = mlflow.run(
+            uri="./train",
+            entry_pont="train",
+            backend="local",
+            parameters={
+                "upstream": train_upstream,
+                "downstream": args.train_downstream,
+                "model_type": args.train_model_type,
+                "cv_type": args.train_cv_type,
+                "n_split": args.train_n_split,
+            }
+        )
+        
+        logger.info(
+            f"""
+                     Train ML project has been completed, 
+                     upstream: {train_upstream},
+                     downstream: {args.train_downstream},
+                     model_type: {args.train_model_type},
+                     cv_type: {args.train_cv_type},
+                     n_split: {args.train_n_split},
+                     """
+        )
+        
+        train_run = mlflow.tracking.MlflowClient().get_run(train_run.run_id)
+
 
 if __name__ == "__main__":
     main()

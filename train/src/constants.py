@@ -23,7 +23,8 @@ class MODEL_ENUM(enum.Enum):
 class CV_ENUM(enum.Enum):
     simple_cv = "cv"
     strat_cv = "strat_cv"
-
+    time_cv = "time_cv"
+    
     @staticmethod
     def has_value(item):
         return item in [v.value for v in CV_ENUM.__members__.values()]
