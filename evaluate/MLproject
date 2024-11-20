@@ -12,12 +12,14 @@ docker_env:
 entry_points:
   evaluate:
     parameters:
+      model: {type: string, default: load}
       upstream: {type: string, default: /opt/artifacts/model/}
-      downstream: {type: string, default: /opt/evaluate/}
+      downstream: {type: string, default: /opt/artifacts/evaluate/}
       test_parent_directory: {type: string, default: /opt/data/preprocess}
 
     command: |
       python -m src.evaluate \
+        --model {model} \
         --upstream {upstream} \
         --downstream {downstream} \
         --test_parent_directory {test_parent_directory}

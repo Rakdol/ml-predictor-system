@@ -73,8 +73,8 @@ def start_run(
         raise ValueError("Invalid model type is provided.")
 
     X_train, y_train = train_set.pandas_reader_dataset(target=target, time_column="Forecast_time")
-    X_test, y_test = test_set.pandas_reader_dataset(target=target, time_column="Forecast_time")
-
+    
+    
     if cv_type == CV_ENUM.simple_cv.value:
         cv = KFold(n_splits=n_split, shuffle=True, random_state=42)
     elif cv_type == CV_ENUM.strat_cv.value:
@@ -125,10 +125,10 @@ def start_run(
     print(f"Best Model with the minimum nmse: {best_key}, {trained_result[best_key]}")
     
     signature = mlflow.models.signature.infer_signature(
-        X_train,
+        X_train.dropna(),
         best_model.predict(X_train),
     )
-    input_sample = X_train[:2]
+    input_sample = X_train.dropna()[:2]
 
     mlflow.sklearn.log_model(
         sk_model=best_model,
@@ -141,6 +141,7 @@ def start_run(
         downstream_directory,
         f"machine_{model_type}_{mlflow_experiment_id}.joblib",
     )
+    
     joblib.dump(best_model, model_file_name)
     mlflow.log_artifact(model_file_name)
     logger.info("Save model in mlflow")
@@ -191,8 +192,8 @@ def main():
     mlflow_experiment_id = int(os.getenv("MLFLOW_EXPERIMENT_ID", 0))
 
     upstream_directory = args.upstream
-    downstream_directory = args.downstream
-
+    downstream_directory = os.path.join(args.downstream, args.model_type)
+    
     if not os.path.exists(downstream_directory):
         os.makedirs(downstream_directory)
 
