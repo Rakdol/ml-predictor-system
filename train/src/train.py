@@ -15,7 +15,14 @@ from sklearn.ensemble import (
 )
 from sklearn.neural_network import MLPRegressor
 
-from src.model import SolarDataset, LoadDataset, get_load_pipeline, get_solar_pipeline, train_cv_models, evaluate
+from src.model import (
+    SolarDataset,
+    LoadDataset,
+    get_load_pipeline,
+    get_solar_pipeline,
+    train_cv_models,
+    evaluate,
+)
 from src.constants import CV_ENUM
 from src.configurations import (
     SolarDataConfigurations,
@@ -26,6 +33,7 @@ from src.configurations import (
 )
 
 logger = getLogger(__name__)
+
 
 def start_run(
     mlflow_experiment_id: str,
@@ -50,7 +58,6 @@ def start_run(
             file_name=TrainConfigurations.TEST_NAME,
         )
         input_pipeline = get_load_pipeline()
-        
 
     elif model_type == "solar":
         target = SolarFeatures.TARGET
@@ -66,39 +73,37 @@ def start_run(
             file_prefix=TrainConfigurations.TEST_PREFIX,
             file_name=TrainConfigurations.TEST_NAME,
         )
-        
+
         input_pipeline = get_solar_pipeline()
 
     else:
         raise ValueError("Invalid model type is provided.")
 
-    X_train, y_train = train_set.pandas_reader_dataset(target=target, time_column="Forecast_time")
-    
-    
+    X_train, y_train = train_set.pandas_reader_dataset(
+        target=target, time_column="Forecast_time"
+    )
+
     if cv_type == CV_ENUM.simple_cv.value:
         cv = KFold(n_splits=n_split, shuffle=True, random_state=42)
     elif cv_type == CV_ENUM.strat_cv.value:
         cv = StratifiedKFold(n_splits=n_split, shuffle=True, random_state=42)
     elif cv_type == CV_ENUM.time_cv.value:
-        cv = TimeSeriesSplit(n_splits=n_split)  
+        cv = TimeSeriesSplit(n_splits=n_split)
     else:
         raise ValueError("Invalid cv type is provided.")
-    
+
     models = {
-                
-                "Decision Tree": DecisionTreeRegressor(),
-                "Random Forest": RandomForestRegressor(),
-                "AdaBoost Regressor": AdaBoostRegressor(),
-                "Gradient Boosting": GradientBoostingRegressor(),
-                "Linear Regression": LinearRegression(),
-                "Lasso Regression": Lasso(),
-                "Ridge Regression": Ridge(),
-                "Elastic Regression": ElasticNet(),
-                "MLP Regression": MLPRegressor(max_iter=2000),
-                
-            }
-    
-    
+        "Decision Tree": DecisionTreeRegressor(),
+        "Random Forest": RandomForestRegressor(),
+        # "AdaBoost Regressor": AdaBoostRegressor(),
+        # "Gradient Boosting": GradientBoostingRegressor(),
+        # "Linear Regression": LinearRegression(),
+        # "Lasso Regression": Lasso(),
+        # "Ridge Regression": Ridge(),
+        # "Elastic Regression": ElasticNet(),
+        # "MLP Regression": MLPRegressor(max_iter=2000),
+    }
+
     trained_result, trained_models = train_cv_models(
         models=models,
         pipe=input_pipeline,
@@ -106,13 +111,15 @@ def start_run(
         X_train=X_train,
         y_train=y_train,
         model_type="regression",
-        params=None
+        params=None,
     )
 
     mlflow.log_metrics(
         {model_name: model_score for model_name, model_score in trained_result.items()}
     )
-    model_train_result_file = os.path.join(downstream_directory, f"model_result_{mlflow_experiment_id}.json")
+    model_train_result_file = os.path.join(
+        downstream_directory, f"model_result_{mlflow_experiment_id}.json"
+    )
 
     with open(model_train_result_file, "w") as f:
         json.dump(trained_result, f)
@@ -123,7 +130,7 @@ def start_run(
     best_model = trained_models[best_key]
 
     print(f"Best Model with the minimum nmse: {best_key}, {trained_result[best_key]}")
-    
+
     signature = mlflow.models.signature.infer_signature(
         X_train.dropna(),
         best_model.predict(X_train),
@@ -141,10 +148,11 @@ def start_run(
         downstream_directory,
         f"machine_{model_type}_{mlflow_experiment_id}.joblib",
     )
-    
+
     joblib.dump(best_model, model_file_name)
     mlflow.log_artifact(model_file_name)
     logger.info("Save model in mlflow")
+
 
 def main():
 
@@ -193,7 +201,7 @@ def main():
 
     upstream_directory = args.upstream
     downstream_directory = os.path.join(args.downstream, args.model_type)
-    
+
     if not os.path.exists(downstream_directory):
         os.makedirs(downstream_directory)
 
