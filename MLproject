@@ -11,6 +11,10 @@ entry_points:
       train_model_type: { type: string, default: load }
       train_cv_type: { type: string, default: cv }
       train_n_split: { type: int, default: 5 }
+      evaluate_model: {type: string, default: load}
+      evaluate_upstream: {type: string, default: /opt/artifacts/model/}
+      evaluate_downstream: {type: string, default: /opt/artifacts/evaluate/}
+      evaluate_test_parent_directory: {type: string, default: /opt/data/preprocess}
 
     command: |
       python -m main \
@@ -21,4 +25,8 @@ entry_points:
         --train_downstream {train_downstream} \
         --train_model_type {train_model_type} \
         --train_cv_type {train_cv_type} \
-        --train_n_split {train_n_split}
+        --train_n_split {train_n_split} \
+        --evaluate_model {evaluate_model} \
+        --evaluate_upstream {evaluate_upstream} \
+        --evaluate_downstream {evaluate_downstream} \
+        --evaluate_test_parent_directory {evaluate_test_parent_directory}

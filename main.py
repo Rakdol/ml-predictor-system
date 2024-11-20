@@ -1,5 +1,6 @@
 import os
 import sys
+from datetime import datetime
 from logging import getLogger
 from argparse import ArgumentParser, RawTextHelpFormatter
 
@@ -91,6 +92,34 @@ def main():
         default=5,
         help="CV's n_split",
     )
+    
+    parser.add_argument(
+        "--evaluate_model",
+        type=str,
+        default="load"
+    )
+    
+    parser.add_argument(
+        "--evaluate_upstream",
+        type=str,
+        default="/opt/artifacts/model/",
+        help="evaluate upstream directory",
+    )
+    
+    parser.add_argument(
+        "--evaluate_downstream",
+        type=str,
+        default="/opt/artifacts/evaluate/",
+        help="evaluate downstream directory",
+    )
+    
+    parser.add_argument(
+        "--evaluate_test_parent_directory",
+        type=str,
+        default="/opt/data/preprocess",
+        help="evaluate_test_parent_directory",
+    )
+
 
     args = parser.parse_args()
     data_name = args.preprocess_data
@@ -166,7 +195,41 @@ def main():
         )
         
         train_run = mlflow.tracking.MlflowClient().get_run(train_run.run_id)
+        
+        evaluate_upstream = os.path.join(
+            "/mlflow/tmp/mlruns/",
+            str(mlflow_experiment_id),
+            train_run.info.run_id,
+            "artifacts/model/",
+        )
 
+        logger.info(f".... Evaluate MLproject start ....")
+        evaluate_run = mlflow.run(
+            uri="./evaluate",
+            entry_point="evaluate",
+            backend="local",
+            parameters={
+                "model": data_name,
+                "upstream": evaluate_upstream,
+                "downstream": args.evaluate_downstream,
+                "test_parent_directory": train_upstream,
+            },
+        )
+
+        logger.info(
+            f"""
+                     Evaluate ML project has been completed, 
+                     model: {data_name}
+                     upstream: {evaluate_upstream},
+                     downstream: {args.evaluate_downstream},
+                     test_parent_directory: {train_upstream}
+                     """
+        )
+        evaluate_run = mlflow.tracking.MlflowClient().get_run(evaluate_run.run_id)
+
+        current_date = datetime.now().strftime("%Y-%m-%d")
+        mlflow.set_tag("Release Date", value=current_date)
+        mlflow.set_tag("Release Model", value="RandomForest")
 
 if __name__ == "__main__":
     main()

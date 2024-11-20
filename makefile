@@ -14,7 +14,7 @@ load-train:
 	mlflow run . --env-manager=local
 
 solar-train:
-	mlflow run . -P preprocess_data=solar --env-manager=local
+	mlflow run . -P preprocess_data=solar -P train_model_type=solar -P evaluate_model=solar --env-manager=local
 
 run-ui:
 	mlflow ui
